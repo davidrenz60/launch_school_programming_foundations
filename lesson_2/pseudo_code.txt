@@ -1,0 +1,82 @@
+1) a method that returns the sum of two integers
+
+given two integers
+-add the two integers together
+-return sum of integers
+
+---------------------------------------------------------
+
+START
+
+#given two integers
+
+PRINT integer 1 + integer 2
+
+END
+
+
+2) a method that takes an array of strings, and returns a string that is all those strings concatenated together
+
+given an array of strings
+-save an empty string
+-iterate through each string in the array 
+-set the empty string equal to itself plus the next string from the array
+-return the new string
+
+--------------------------------------------------------
+
+START
+
+given an array of strings
+
+SET new_string = first string in array
+
+SET iterator = 1
+WHILE iterator <= length of array
+	SET new_string = new_string + string at array[iterator]
+	iterator = iterator + 1
+
+PRINT new_string
+
+END
+
+
+3) a method that takes an array of integers, and returns a new array with every other element
+
+given an array of integers
+-create a new empty array
+-iterate through the array of integers
+-if the index of the integer is even, add it to the new array
+-return the new array
+
+------------------------------------------------------------
+
+START
+
+given an array of integers
+
+SET new_array = empty array
+SET iterator = 0
+
+WHILE iterator < length of array
+	if iterator = even number
+		push value at that index to new_array
+
+	iterator = iterator + 1
+
+PRINT new_array
+
+END 
+
+
+
+
+
+
+
+
+
+
+
+
+
