@@ -1,0 +1,18 @@
+-methods that contain ! usually mutate the caller
+-? used in a method usually signify the method will return a boolean value
+-these are actual parts of method names and not part of ruby syntax 
+
+
+1. != means not equal to. Can use as a condition
+
+2. '!' used before a value changes to its opposite boolean value
+  
+3. this is a convention used in naming methods that are destructive
+  
+4. this may signify a ternary operator 
+   ex: a ? b : c
+
+5. ? after a method usually signifies the method will return a boolean
+
+6. !! this will turn whatever is follwing into its boolean value, regardless
+   of what type of object it is   
