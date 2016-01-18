@@ -45,6 +45,10 @@ def update_score(scores, player, computer, player1_choice, player2_choice)
   end
 end
 
+def initialize_scores
+  { player: 0, computer: 0 }
+end
+
 def check_score(scores)
   if scores[:player] == 5
     prompt("Player wins!\n ")
@@ -53,14 +57,17 @@ def check_score(scores)
   end
 end
 
-def player_choice
-  answer = gets.chomp.downcase
-  choice = letter_to_choice(answer)
-  if VALID_CHOICES.include?(choice)
-    choice
-  else
+def player_draw
+  loop do
+    answer = gets.chomp.downcase
+    choice = letter_to_choice(answer)
+    break choice if VALID_CHOICES.include?(choice)
     prompt("Please enter a valid selection")
   end
+end
+
+def computer_draw
+  VALID_CHOICES.sample
 end
 
 def play_again?
@@ -85,18 +92,11 @@ puts(opening_message)
 
 loop do
   prompt("New game...first to 5 points wins\n ")
-  scores = { player: 0, computer: 0 }
-
+  scores = initialize_scores
   loop do
     prompt("Enter your selection")
-    choice = ''
-
-    loop do
-      choice = player_choice
-      break unless choice.nil?
-    end
-
-    computer_choice = VALID_CHOICES.sample
+    choice = player_draw
+    computer_choice = computer_draw
 
     prompt("You chose: #{choice}")
     prompt("Computer chose: #{computer_choice}")
@@ -107,10 +107,8 @@ loop do
     prompt("The score is: Player: #{scores[:player]}, Computer: #{scores[:computer]}")
 
     check_score(scores)
-
     break if scores.value?(5)
   end
-
   break unless play_again?
 end
 
