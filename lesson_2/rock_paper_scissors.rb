@@ -12,10 +12,10 @@ def win?(first, second)
     (first == 'spock' && (second == 'rock' || second == 'scissors'))
 end
 
-def display_results(player, computer)
-  if win?(player, computer)
+def display_results(player1, player2)
+  if win?(player1, player2)
     prompt("Player scores a point!\n ")
-  elsif win?(computer, player)
+  elsif win?(player2, player1)
     prompt("Computer scores a point!\n ")
   else
     prompt("It's a tie!\n ")
@@ -23,23 +23,26 @@ def display_results(player, computer)
 end
 
 def letter_to_choice(letter)
-  word = case letter
-         when 'r'
-           'rock'
-         when 'p'
-           'paper'
-         when 's'
-           'scissors'
-         when 'l'
-           'lizard'
-         when 'sp'
-           'spock'
-         end
-  word
+  case letter
+  when 'r'
+    'rock'
+  when 'p'
+    'paper'
+  when 's'
+    'scissors'
+  when 'l'
+    'lizard'
+  when 'sp'
+    'spock'
+  end
 end
 
-def update_score(scores, player)
-  scores[player] += 1
+def update_score(scores, player, computer, player1_choice, player2_choice)
+  if win?(player1_choice, player2_choice)
+    scores[player] += 1
+  elsif win?(player2_choice, player1_choice)
+    scores[computer] += 1
+  end
 end
 
 def check_score(scores)
@@ -48,6 +51,21 @@ def check_score(scores)
   elsif scores[:computer] == 5
     prompt("Computer wins!\n ")
   end
+end
+
+def player_choice
+  answer = gets.chomp.downcase
+  choice = letter_to_choice(answer)
+  if VALID_CHOICES.include?(choice)
+    choice
+  else
+    prompt("Please enter a valid selection")
+  end
+end
+
+def play_again?
+  prompt("Would you like to play another round? Enter 'y' to continue")
+  gets.chomp.downcase.start_with?('y')
 end
 
 opening_message = <<-MSG
@@ -70,18 +88,12 @@ loop do
   scores = { player: 0, computer: 0 }
 
   loop do
+    prompt("Enter your selection")
     choice = ''
 
     loop do
-      prompt("Enter your choice")
-
-      choice = letter_to_choice(gets.chomp.downcase)
-
-      if VALID_CHOICES.include?(choice)
-        break
-      else
-        prompt("Please enter a valid selection")
-      end
+      choice = player_choice
+      break unless choice.nil?
     end
 
     computer_choice = VALID_CHOICES.sample
@@ -90,9 +102,7 @@ loop do
     prompt("Computer chose: #{computer_choice}")
 
     display_results(choice, computer_choice)
-
-    update_score(scores, :player) if win?(choice, computer_choice)
-    update_score(scores, :computer) if win?(computer_choice, choice)
+    update_score(scores, :player, :computer, choice, computer_choice)
 
     prompt("The score is: Player: #{scores[:player]}, Computer: #{scores[:computer]}")
 
@@ -101,9 +111,7 @@ loop do
     break if scores.value?(5)
   end
 
-  prompt("Would you like to play another round? Enter 'y' to continue")
-  answer = gets.chomp
-  break unless answer.downcase.start_with?('y')
+  break unless play_again?
 end
 
 prompt("Thank you for playing. Goodbye!")
