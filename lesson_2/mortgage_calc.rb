@@ -32,7 +32,7 @@ end
 
 def years_entry
   loop do
-  years = gets.chomp
+    years = gets.chomp
     break years if integer?(years) && years.to_i >= 0
     prompt("Please enter a vaild number of years")
   end
@@ -50,16 +50,15 @@ def start_over?
   answer.downcase.start_with?('y')
 end
 
-
 prompt("Welcome to the Mortgage Calculator!")
 
 loop do
   prompt("What is the amount of the loan?")
   amount = loan_entry
-  
+
   prompt("What is the Annual Percentage Rate? Example: enter 2.8 for 2.8%")
   apr = interest_entry
-  
+
   prompt("What is the duration of the loan? Enter the amount of years")
   years = years_entry
 
