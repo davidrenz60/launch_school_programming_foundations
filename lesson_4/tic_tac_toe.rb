@@ -1,3 +1,4 @@
+FIRST_MOVE = 'choose'
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
@@ -58,8 +59,42 @@ def player_places_piece!(brd)
 end
 
 def computer_places_piece!(brd)
-  square = empty_squares(brd).sample
+  square = ''
+
+  # offense
+  WINNING_LINES.each do |line|
+    square = find_at_risk_square(line, brd, COMPUTER_MARKER)
+    break if square
+  end
+
+  # defense
+  if !square
+    WINNING_LINES.each do |line|
+      square = find_at_risk_square(line, brd, PLAYER_MARKER)
+      break if square
+    end
+  end
+
+  # pick square 5 if available
+  if !square
+    if empty_squares(brd).include?(5)
+      square = 5
+    end
+  end
+
+  # random
+  if !square
+    square = empty_squares(brd).sample
+  end
   brd[square] = COMPUTER_MARKER
+end
+
+def find_at_risk_square(line, brd, marker)
+  if brd.values_at(*line).count(marker) == 2
+    brd.select { |key, value| line.include?(key) && value == INITIAL_MARKER }.keys.first
+  else
+    nil
+  end
 end
 
 def board_full?(brd)
@@ -95,11 +130,7 @@ def display_winner(score, brd)
 end
 
 def reset_score(score)
-  if first_to_five?(score)
-    initialize_score
-  else
-    score
-  end
+  first_to_five?(score) ? initialize_score : score
 end
 
 def joinor(array, mark=', ', word='or')
@@ -107,21 +138,53 @@ def joinor(array, mark=', ', word='or')
   array.join(mark)
 end
 
+def choose_first_move
+  loop do
+    prompt "Please choose who will go first. ('p' for player or 'c' for computer)"
+    answer = gets.chomp.downcase
+    case answer
+    when 'p'
+      break 'player'
+    when 'c'
+      break 'computer'
+    else
+      prompt "Please enter a valid choice"
+    end
+  end
+end
+
 loop do
   score = initialize_score
+  if FIRST_MOVE == 'choose'
+    who_goes_first = choose_first_move
+  end
 
   loop do
     board = initialize_board
+    display_board(board)
 
     loop do
       display_board(board)
       display_score(score)
 
-      player_places_piece!(board)
-      break if someone_won?(board) || board_full?(board)
+      # cpu foes first if set to computer
+      if who_goes_first == 'computer'
+        computer_places_piece!(board)
+        break if someone_won?(board) || board_full?(board)
+        display_board(board)
+        display_score(score)
 
-      computer_places_piece!(board)
-      break if someone_won?(board) || board_full?(board)
+        player_places_piece!(board)
+        break if someone_won?(board) || board_full?(board)
+
+      # player goes first by default
+      else
+        player_places_piece!(board)
+        break if someone_won?(board) || board_full?(board)
+
+        computer_places_piece!(board)
+        break if someone_won?(board) || board_full?(board)
+      end
     end
 
     display_board(board)
@@ -142,7 +205,7 @@ loop do
     break if answer.downcase.start_with?('q')
   end
 
-  prompt "Would you like to play a new round? ('y' or 'n' to exit)"
+  prompt "Would you like to start a new round? ('y' or 'n' to exit)"
   answer = gets.chomp
   break if answer.downcase.start_with?('n')
 end
