@@ -1,4 +1,3 @@
-FIRST_MOVE = 'choose'
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
@@ -10,22 +9,46 @@ def prompt(msg)
   puts "=> #{msg}"
 end
 
+def opening_message
+  system 'clear'
+  puts <<~MSG
+    ---------------------------
+
+    **Welcome to Tic-Tac-Toe!**
+
+    ---------------------------
+
+    *First player to 5 points wins.
+    *Player is '#{PLAYER_MARKER}. Computer is '#{COMPUTER_MARKER}'.
+    *enter choice by square number:
+
+        | 1 | 2 | 3 |
+        -------------
+        | 4 | 5 | 6 |
+        -------------
+        | 7 | 8 | 9 |
+
+
+  MSG
+end
+
 def display_board(brd)
   system 'clear'
-  puts "You are #{PLAYER_MARKER}. Computer is #{COMPUTER_MARKER}."
-  puts "First to 5 points wins."
-  puts "     |     |"
-  puts "  #{brd[1]}  |  #{brd[2]}  |  #{brd[3]}"
-  puts "     |     |"
-  puts "-----+-----+-----"
-  puts "     |     |"
-  puts "  #{brd[4]}  |  #{brd[5]}  |  #{brd[6]}"
-  puts "     |     |"
-  puts "-----+-----+-----"
-  puts "     |     |"
-  puts "  #{brd[7]}  |  #{brd[8]}  |  #{brd[9]}"
-  puts "     |     |"
   puts ""
+  puts <<~MSG
+         |     |
+      #{brd[1]}  |  #{brd[2]}  |  #{brd[3]}
+         |     |
+    -----+-----+-----
+         |     |
+      #{brd[4]}  |  #{brd[5]}  |  #{brd[6]}
+         |     |
+    -----+-----+-----
+         |     |
+      #{brd[7]}  |  #{brd[8]}  |  #{brd[9]}
+         |     |
+
+  MSG
 end
 
 def initialize_board
@@ -49,51 +72,51 @@ end
 def player_places_piece!(brd)
   square = ''
   loop do
-    prompt "Choose a square #{joinor(empty_squares(brd))}"
+    prompt "Choose a square: #{joinor(empty_squares(brd))}."
     square = gets.chomp.to_i
     break if empty_squares(brd).include?(square)
-    prompt "Sorry that's not a valid choice."
+    prompt "Sorry, that's not a valid choice."
   end
 
   brd[square] = PLAYER_MARKER
 end
 
-def computer_places_piece!(brd)
-  square = ''
-
-  # offense
+def computer_offense(brd, square)
   WINNING_LINES.each do |line|
     square = find_at_risk_square(line, brd, COMPUTER_MARKER)
     break if square
   end
+  square
+end
 
-  # defense
-  if !square
-    WINNING_LINES.each do |line|
-      square = find_at_risk_square(line, brd, PLAYER_MARKER)
-      break if square
-    end
+def computer_defense(brd, square)
+  WINNING_LINES.each do |line|
+    square = find_at_risk_square(line, brd, PLAYER_MARKER)
+    break if square
   end
+  square
+end
 
-  # pick square 5 if available
-  if !square
-    if empty_squares(brd).include?(5)
-      square = 5
-    end
-  end
-
-  # random
-  if !square
-    square = empty_squares(brd).sample
-  end
+def computer_places_piece!(brd)
+  square = ''
+  square = computer_offense(brd, square)
+  square = computer_defense(brd, square) unless square
+  square = 5 if !square && empty_squares(brd).include?(5)
+  square = empty_squares(brd).sample unless square
   brd[square] = COMPUTER_MARKER
+end
+
+def place_piece!(brd, current_player)
+  current_player == 'computer' ? computer_places_piece!(brd) : player_places_piece!(brd)
+end
+
+def alternate_player(current_player)
+  current_player == 'computer' ? 'player' : 'computer'
 end
 
 def find_at_risk_square(line, brd, marker)
   if brd.values_at(*line).count(marker) == 2
     brd.select { |key, value| line.include?(key) && value == INITIAL_MARKER }.keys.first
-  else
-    nil
   end
 end
 
@@ -121,12 +144,16 @@ def update_score(score, brd)
   score[:computer] += 1 if detect_winner(brd) == "Computer"
 end
 
+def display_round_winner(brd)
+  someone_won?(brd) ? (prompt "#{detect_winner(brd)} wins the round!") : (prompt "It's a tie!")
+end
+
 def first_to_five?(score)
   score.value?(5)
 end
 
-def display_winner(score, brd)
-  prompt "#{detect_winner(brd)} wins the round! Game over." if first_to_five?(score)
+def display_game_winner(score, brd)
+  prompt "The game is over. #{detect_winner(brd)} wins!" if first_to_five?(score)
 end
 
 def reset_score(score)
@@ -140,7 +167,7 @@ end
 
 def choose_first_move
   loop do
-    prompt "Please choose who will go first. ('p' for player or 'c' for computer)"
+    prompt "Enter who will choose first: ('p' for player or 'c' for computer)."
     answer = gets.chomp.downcase
     case answer
     when 'p'
@@ -148,16 +175,26 @@ def choose_first_move
     when 'c'
       break 'computer'
     else
-      prompt "Please enter a valid choice"
+      prompt "Please enter a valid choice."
     end
   end
 end
 
+def continue?
+  prompt "Press return to continue. Enter 'q' to quit or start a new game."
+  gets.chomp.downcase.start_with?('q')
+end
+
+def new_game?
+  prompt "Enter 'q' to quit or press return to start a new game."
+  gets.chomp.downcase.start_with?('q')
+end
+
+opening_message
+
 loop do
   score = initialize_score
-  if FIRST_MOVE == 'choose'
-    who_goes_first = choose_first_move
-  end
+  current_player = choose_first_move
 
   loop do
     board = initialize_board
@@ -166,48 +203,23 @@ loop do
     loop do
       display_board(board)
       display_score(score)
-
-      # cpu foes first if set to computer
-      if who_goes_first == 'computer'
-        computer_places_piece!(board)
-        break if someone_won?(board) || board_full?(board)
-        display_board(board)
-        display_score(score)
-
-        player_places_piece!(board)
-        break if someone_won?(board) || board_full?(board)
-
-      # player goes first by default
-      else
-        player_places_piece!(board)
-        break if someone_won?(board) || board_full?(board)
-
-        computer_places_piece!(board)
-        break if someone_won?(board) || board_full?(board)
-      end
+      place_piece!(board, current_player)
+      current_player = alternate_player(current_player)
+      break if someone_won?(board) || board_full?(board)
     end
 
     display_board(board)
     update_score(score, board)
     display_score(score)
 
-    if someone_won?(board)
-      prompt "#{detect_winner(board)} wins and scores a point!"
-    else
-      prompt "It's a tie!"
-    end
+    display_round_winner(board)
 
-    display_winner(score, board)
+    display_game_winner(score, board)
     score = reset_score(score)
-
-    prompt "Press return to continue. Enter 'q' to quit or start a new round"
-    answer = gets.chomp
-    break if answer.downcase.start_with?('q')
+    break if continue?
   end
 
-  prompt "Would you like to start a new round? ('y' or 'n' to exit)"
-  answer = gets.chomp
-  break if answer.downcase.start_with?('n')
+  break if new_game?
 end
 
 prompt "Thanks for playing Tic-Tac-Toe. Goodbye!"
