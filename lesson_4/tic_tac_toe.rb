@@ -1,3 +1,5 @@
+# require 'pry'
+
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
@@ -20,7 +22,7 @@ def opening_message
 
     *First player to 5 points wins.
     *Player is '#{PLAYER_MARKER}. Computer is '#{COMPUTER_MARKER}'.
-    *enter choice by square number:
+    *Enter choice by square number:
 
         | 1 | 2 | 3 |
         -------------
@@ -81,7 +83,7 @@ def player_places_piece!(brd)
   brd[square] = PLAYER_MARKER
 end
 
-def computer_offense(brd, square)
+def computer_offense(brd, square='')
   WINNING_LINES.each do |line|
     square = find_at_risk_square(line, brd, COMPUTER_MARKER)
     break if square
@@ -98,8 +100,7 @@ def computer_defense(brd, square)
 end
 
 def computer_places_piece!(brd)
-  square = ''
-  square = computer_offense(brd, square)
+  square = computer_offense(brd)
   square = computer_defense(brd, square) unless square
   square = 5 if !square && empty_squares(brd).include?(5)
   square = empty_squares(brd).sample unless square
@@ -140,8 +141,8 @@ def detect_winner(brd)
 end
 
 def update_score(score, brd)
-  score[:player] += 1 if detect_winner(brd) == "Player"
-  score[:computer] += 1 if detect_winner(brd) == "Computer"
+  winner = detect_winner(brd)
+  score[winner.downcase.to_sym] += 1 if winner
 end
 
 def display_round_winner(brd)
@@ -181,13 +182,13 @@ def choose_first_move
 end
 
 def continue?
-  prompt "Press return to continue. Enter 'q' to quit or start a new game."
+  prompt "Press return to continue. Enter 'q' to quit this round"
   gets.chomp.downcase.start_with?('q')
 end
 
 def new_game?
-  prompt "Enter 'q' to quit or press return to start a new game."
-  gets.chomp.downcase.start_with?('q')
+  prompt "Would you like to play again? Enter 'y' to start a new game"
+  gets.chomp.downcase.start_with?('y')
 end
 
 opening_message
@@ -195,6 +196,7 @@ opening_message
 loop do
   score = initialize_score
   current_player = choose_first_move
+  # binding.pry
 
   loop do
     board = initialize_board
@@ -219,7 +221,7 @@ loop do
     break if continue?
   end
 
-  break if new_game?
+  break unless new_game?
 end
 
 prompt "Thanks for playing Tic-Tac-Toe. Goodbye!"
