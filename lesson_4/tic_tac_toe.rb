@@ -1,5 +1,3 @@
-# require 'pry'
-
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
@@ -196,7 +194,6 @@ opening_message
 loop do
   score = initialize_score
   current_player = choose_first_move
-  # binding.pry
 
   loop do
     board = initialize_board
