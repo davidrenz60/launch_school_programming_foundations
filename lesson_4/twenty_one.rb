@@ -22,8 +22,10 @@ def deal_hand!(player_hand, dealer_hand, deck)
 end
 
 def display_opening_hands(player_hand, dealer_hand)
-  prompt "You have: #{player_hand[0]} #{player_hand[1]} Total of #{total(player_hand)}"
-  prompt "Dealer shows: #{dealer_hand[0]} [--------]"
+  system 'clear'
+  prompt "Dealing..."
+  prompt "You have: #{player_hand} Total of #{total(player_hand)}"
+  prompt "Dealer shows: #{dealer_hand[0]}, [------]"
 end
 
 def hit(cards, deck)
@@ -48,55 +50,61 @@ def total(cards)
     end
   end
 
-  values.count("A").times do
-    sum -= 10 if sum > 21
-  end
-
+  adjust_for_aces(values, sum)
   sum
+end
+
+def adjust_for_aces(values, sum)
+  values.count("A").times { sum -= 10 if sum > 21 }
 end
 
 def player_turn!(player_hand, deck)
   loop do
-    choice = nil
-    loop do
-      prompt "Would you like to hit or stay? 'h' for hit or 's' for stay"
-      choice = gets.chomp.downcase
-      break if choice == "h" || choice == "s"
-      prompt "Please enter 'h' or 's'"
-    end
-
-    if choice == "h"
-      prompt "You hit"
+    choice = hit_or_stay
+    if choice == 'h'
+      prompt "You hit..."
       hit(player_hand, deck)
+      break if busted?(player_hand)
       prompt "You have: #{player_hand}. Total of #{total(player_hand)}"
+    else
+      prompt "You choose to stay"
+      break
     end
+  end
+end
 
-    break if choice == "s" || busted?(player_hand)
+def hit_or_stay
+  loop do
+    prompt "Would you like to (h)it or (s)tay?"
+    choice = gets.chomp.downcase
+    break choice if ["h", "s"].include?(choice)
+    prompt "Please enter 'h' or 's'"
   end
 end
 
 def dealer_turn!(dealer_hand, deck)
+  prompt "Dealer's turn:"
   loop do
+    prompt "Dealer stays!" if total(dealer_hand) >= 17 && !busted?(dealer_hand)
     break if busted?(dealer_hand) || total(dealer_hand) >= 17
-    prompt "Dealer hits"
+    prompt "Dealer hits..."
     hit(dealer_hand, deck)
-    prompt "Dealer shows #{dealer_hand} Total of #{total(dealer_hand)}"
-    prompt "Dealer stays!" if total(dealer_hand) >= 17 && !busted(dealer_hand)
+    prompt "Dealer has #{dealer_hand} Total of #{total(dealer_hand)}"
   end
 end
 
 def play_again?
-  prompt "Would you like to play again?"
-  gets.chomp.downcase. start_with?('y')
+  prompt "Would you like to play again? 'y' or 'n'"
+  gets.chomp.downcase.start_with?('y')
 end
 
 def detect_winner(player_hand, dealer_hand)
   player_total = total(player_hand)
   dealer_total = total(dealer_hand)
 
-  if player_total > 21
+  if busted?(player_hand)
     :player_busted
-  elsif dealer_total > 21
+  elsif busted?(dealer_hand)
     :dealer_busted
   elsif player_total > dealer_total
     :player
@@ -108,16 +116,16 @@ def detect_winner(player_hand, dealer_hand)
 end
 
 def display_final_hands(player_hand, dealer_hand)
-  puts <<~MSG 
-    --------------------------------------------------
-    "You have: #{player_hand[0]} #{player_hand[1]} Total of #{total(player_hand)}"
-    "Dealer has: #{dealer_hand[0]} #{dealer_hand[1]} Total of #{total(dealer_hand)}"
-    --------------------------------------------------
-   MSG
+  puts <<-MSG
+  --------------------------------------------------
+  "You have: #{player_hand} Total of #{total(player_hand)}"
+  "Dealer has: #{dealer_hand} Total of #{total(dealer_hand)}"
+  --------------------------------------------------
+  MSG
 end
 
-
 def display_winner(player_hand, dealer_hand)
+  display_final_hands(player_hand, dealer_hand)
   result = detect_winner(player_hand, dealer_hand)
   case result
   when :player_busted
@@ -134,6 +142,8 @@ def display_winner(player_hand, dealer_hand)
 end
 
 opening_message
+prompt "Press return to start"
+gets.chomp
 
 loop do
   deck = initialize_deck
@@ -146,11 +156,12 @@ loop do
 
   player_turn!(player_hand, deck)
 
-  prompt "Dealer's turn:"
+  if busted?(player_hand)
+    display_winner(player_hand, dealer_hand)
+    play_again? ? redo : break
+  end
 
-  dealer_turn!(dealer_hand, deck) unless busted?(player_hand)
-
-  display_final_hands(player_hand, dealer_hand)
+  dealer_turn!(dealer_hand, deck)
 
   display_winner(player_hand, dealer_hand)
 
