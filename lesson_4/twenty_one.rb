@@ -1,5 +1,7 @@
 SUITS = %w(S C D H)
 CARDS = (2..10).to_a + %w(A K Q J)
+WHATEVER_ONE = 21
+DEALER_STAY = WHATEVER_ONE - 4
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -7,7 +9,12 @@ end
 
 def opening_message
   system 'clear'
-  prompt "Welcome to Twenty-One!"
+  prompt "Welcome to #{WHATEVER_ONE}!"
+  prompt "First player to 5 points wins."
+end
+
+def initialize_score
+  { player: 4, dealer: 0 }
 end
 
 def initialize_deck
@@ -21,8 +28,9 @@ def deal_hand!(player_hand, dealer_hand, deck)
   end
 end
 
-def display_opening_hands(player_hand, dealer_hand)
+def display_opening_hands(player_hand, dealer_hand, score)
   system 'clear'
+  display_score(score)
   prompt "Dealing..."
   prompt "You have: #{player_hand} Total of #{total(player_hand)}"
   prompt "Dealer shows: #{dealer_hand[0]}, [------]"
@@ -33,7 +41,7 @@ def hit(cards, deck)
 end
 
 def busted?(cards)
-  total(cards) > 21
+  total(cards) > WHATEVER_ONE
 end
 
 def total(cards)
@@ -55,7 +63,7 @@ def total(cards)
 end
 
 def adjust_for_aces(values, sum)
-  values.count("A").times { sum -= 10 if sum > 21 }
+  values.count("A").times { sum -= 10 if sum > WHATEVER_ONE }
 end
 
 def player_turn!(player_hand, deck)
@@ -85,8 +93,8 @@ end
 def dealer_turn!(dealer_hand, deck)
   prompt "Dealer's turn:"
   loop do
-    prompt "Dealer stays!" if total(dealer_hand) >= 17 && !busted?(dealer_hand)
-    break if busted?(dealer_hand) || total(dealer_hand) >= 17
+    prompt "Dealer stays!" if total(dealer_hand) >= DEALER_STAY && !busted?(dealer_hand)
+    break if busted?(dealer_hand) || total(dealer_hand) >= DEALER_STAY
     prompt "Dealer hits..."
     hit(dealer_hand, deck)
     prompt "Dealer has #{dealer_hand} Total of #{total(dealer_hand)}"
@@ -98,14 +106,27 @@ def play_again?
   gets.chomp.downcase.start_with?('y')
 end
 
+def update_score(score, player_hand, dealer_hand)
+  case detect_winner(player_hand, dealer_hand)
+  when :dealer_bust, :player
+    score[:player] += 1
+  when :player_bust, :dealer
+    score[:dealer] += 1
+  end
+end
+
+def display_score(score)
+  prompt "The score is: You: #{score[:player]}. Dealer: #{score[:dealer]}"
+end
+
 def detect_winner(player_hand, dealer_hand)
   player_total = total(player_hand)
   dealer_total = total(dealer_hand)
 
   if busted?(player_hand)
-    :player_busted
+    :player_bust
   elsif busted?(dealer_hand)
-    :dealer_busted
+    :dealer_bust
   elsif player_total > dealer_total
     :player
   elsif player_total < dealer_total
@@ -115,8 +136,12 @@ def detect_winner(player_hand, dealer_hand)
   end
 end
 
+def first_to_five?(score)
+  score.value?(5)
+end
+
 def display_final_hands(player_hand, dealer_hand)
-  puts <<-MSG
+  puts <<~MSG
   --------------------------------------------------
   "You have: #{player_hand} Total of #{total(player_hand)}"
   "Dealer has: #{dealer_hand} Total of #{total(dealer_hand)}"
@@ -124,26 +149,36 @@ def display_final_hands(player_hand, dealer_hand)
   MSG
 end
 
-def display_winner(player_hand, dealer_hand)
+def display_results(player_hand, dealer_hand)
   display_final_hands(player_hand, dealer_hand)
   result = detect_winner(player_hand, dealer_hand)
-  case result
-  when :player_busted
-    prompt "You bust! Dealer wins!"
-  when :dealer_busted
-    prompt "Dealer busts! You win!"
-  when :player
-    prompt "You win!"
-  when :dealer
-    prompt "Dealer wins!"
-  when :push
-    prompt "Push"
+  prompt case result
+         when :player_bust
+           "You bust! Dealer wins!"
+         when :dealer_bust
+           "Dealer busts! You win!"
+         when :player
+           "You win!"
+         when :dealer
+           "Dealer wins!"
+         when :push
+           "Push!"
+         end
+end
+
+def display_overall_winner(score)
+  if score[:player] == 5
+    prompt "You are first to 5 points. You win!!"
+  else
+    prompt "Dealer is first to 5 points. Dealer wins!!"
   end
 end
 
 opening_message
 prompt "Press return to start"
 gets.chomp
+
+score = initialize_score
 
 loop do
   deck = initialize_deck
@@ -152,20 +187,22 @@ loop do
   dealer_hand = []
   deal_hand!(player_hand, dealer_hand, deck)
 
-  display_opening_hands(player_hand, dealer_hand)
+  display_opening_hands(player_hand, dealer_hand, score)
 
   player_turn!(player_hand, deck)
 
-  if busted?(player_hand)
-    display_winner(player_hand, dealer_hand)
-    play_again? ? redo : break
+  dealer_turn!(dealer_hand, deck) unless busted?(player_hand)
+
+  display_results(player_hand, dealer_hand)
+  update_score(score, player_hand, dealer_hand)
+
+  if first_to_five?(score)
+    display_score(score)
+    display_overall_winner(score)
+    score = initialize_score
   end
-
-  dealer_turn!(dealer_hand, deck)
-
-  display_winner(player_hand, dealer_hand)
 
   break unless play_again?
 end
 
-prompt "Thanks for playing Twenty-One!"
+prompt "Thanks for playing #{WHATEVER_ONE}!"
