@@ -14,7 +14,7 @@ def opening_message
 end
 
 def initialize_score
-  { player: 4, dealer: 0 }
+  { player: 0, dealer: 0 }
 end
 
 def initialize_deck
