@@ -1,7 +1,7 @@
 SUITS = %w(S C D H)
 CARDS = (2..10).to_a + %w(A K Q J)
-WHATEVER_ONE = 21
-DEALER_STAY = WHATEVER_ONE - 4
+WINNING_SCORE = 21
+DEALER_STAY = 17
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -9,7 +9,7 @@ end
 
 def opening_message
   system 'clear'
-  prompt "Welcome to #{WHATEVER_ONE}!"
+  prompt "Welcome to #{WINNING_SCORE}!"
   prompt "First player to 5 points wins."
 end
 
@@ -41,7 +41,7 @@ def hit(cards, deck)
 end
 
 def busted?(cards)
-  total(cards) > WHATEVER_ONE
+  total(cards) > WINNING_SCORE
 end
 
 def total(cards)
@@ -58,12 +58,14 @@ def total(cards)
     end
   end
 
-  adjust_for_aces(values, sum)
-  sum
+  sum = adjust_for_aces(values, sum)
 end
 
 def adjust_for_aces(values, sum)
-  values.count("A").times { sum -= 10 if sum > WHATEVER_ONE }
+  values.count("A").times do
+    sum -= 10 if sum > WINNING_SCORE
+  end
+  sum
 end
 
 def player_turn!(player_hand, deck)
@@ -205,4 +207,4 @@ loop do
   break unless play_again?
 end
 
-prompt "Thanks for playing #{WHATEVER_ONE}!"
+prompt "Thanks for playing #{WINNING_SCORE}!"
