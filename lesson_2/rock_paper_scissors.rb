@@ -49,14 +49,6 @@ def initialize_scores
   { player: 0, computer: 0 }
 end
 
-def check_score(scores)
-  if scores[:player] == 5
-    prompt("Player wins!\n ")
-  elsif scores[:computer] == 5
-    prompt("Computer wins!\n ")
-  end
-end
-
 def player_draw
   loop do
     answer = gets.chomp.downcase
@@ -68,6 +60,18 @@ end
 
 def computer_draw
   VALID_CHOICES.sample
+end
+
+def display_overall_winner(scores)
+  if scores[:player] == 5
+    prompt("Player wins!\n ")
+  elsif scores[:computer] == 5
+    prompt("Computer wins!\n ")
+  end
+end
+
+def first_to_five?(scores)
+  scores.value?(5)
 end
 
 def play_again?
@@ -106,8 +110,8 @@ loop do
 
     prompt("The score is: Player: #{scores[:player]}, Computer: #{scores[:computer]}")
 
-    check_score(scores)
-    break if scores.value?(5)
+    display_overall_winner(scores)
+    break if first_to_five?(scores)
   end
   break unless play_again?
 end
