@@ -44,10 +44,13 @@ def calculate_payment(amount, apr, years)
   amount.to_f * (monthly_interest / (1 - ((1 + monthly_interest)**-months)))
 end
 
+def display_monthly_payment(monthly_payment)
+  prompt("The monthly payment for this loan is $#{format('%2.2f', monthly_payment)}")
+end
+
 def start_over?
   prompt("Would you like to calculate another loan? Enter 'Y' to continue")
-  answer = gets.chomp
-  answer.downcase.start_with?('y')
+  gets.chomp.downcase.start_with?('y')
 end
 
 prompt("Welcome to the Mortgage Calculator!")
@@ -64,7 +67,7 @@ loop do
 
   monthly_payment = calculate_payment(amount, apr, years)
 
-  prompt("The monthly payment for this loan is $#{format('%2.2f', monthly_payment)}")
+  display_monthly_payment(monthly_payment)
   break unless start_over?
 end
 
